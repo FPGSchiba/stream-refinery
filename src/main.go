@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -8,40 +9,68 @@ import (
 	"streamref/src/util"
 )
 
-func main() {
-	argsWithProg := os.Args
-	logger := util.Logger{
-		LogLevel: util.LevelDebug,
-		FilePath: "./test.txt",
-		LogType:  util.LogTypeConsole,
-	}
+func handleArgs(args []string) (config.Node, error) {
 	var node config.Node
-	if len(argsWithProg) > 1 {
-		switch len(argsWithProg) {
+	if len(args) > 1 {
+		switch len(args) {
 		case 2:
 			node.NodeType = config.Master
 		case 3:
-			if argsWithProg[1] == config.Sub || argsWithProg[1] == config.Refinery || argsWithProg[1] == config.Receiver {
-				node.NodeType = argsWithProg[1]
+			if args[1] == config.Sub || args[1] == config.Refinery || args[1] == config.Receiver {
+				node.NodeType = args[1]
 			} else {
 
-				message := fmt.Sprintf("NodeType: %v is not known.", argsWithProg[1])
-				logger.Log(message, util.LevelError)
-				os.Exit(util.ArgumentErrorCode)
+				message := fmt.Sprintf("NodeType: %v is not known.", args[1])
+				return node, errors.New(message)
 			}
 			regexIP, _ := regexp.Compile("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$")
 			regexHostName, _ := regexp.Compile("^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$")
 
-			if regexIP.MatchString(argsWithProg[2]) || regexHostName.MatchString(argsWithProg[2]) {
-				node.MasterHost = argsWithProg[2]
+			if regexIP.MatchString(args[2]) || regexHostName.MatchString(args[2]) {
+				node.MasterHost = args[2]
 			} else {
-				message := fmt.Sprintf("Hostname: %v is not a valid hostname.", argsWithProg[1])
-				logger.Log(message, util.LevelError)
-				os.Exit(util.ArgumentErrorCode)
+				message := fmt.Sprintf("Hostname: %v is not a valid hostname.", args[1])
+				return node, errors.New(message)
 			}
 		}
 	} else {
+		return node, errors.New("at least one argument expected")
+	}
+	return node, nil
+}
+
+func main() {
+	argsWithProg := os.Args
+	logger := util.Logger{
+		LogLevel: util.LevelDebug,
+		FilePath: "/Users/schiba/Projects/stream-refinery/log.txt",
+		LogType:  util.LogTypeConFile,
+	}
+	node, err := handleArgs(argsWithProg)
+	if err != nil {
+		logger.Log(err.Error(), util.LevelError)
 		os.Exit(util.ArgumentErrorCode)
 	}
-	fmt.Printf("%+v\n", node)
+	result, err := config.Construct(node)
+	if err != nil {
+		logger.Log(err.Error(), util.LevelError)
+		os.Exit(util.NodeTypeError)
+	}
+	switch result.NodeType {
+	case config.Master:
+		masterNode := result.ResultNodeMaster.NodeRes
+		masterNode.Start(logger)
+		/*
+			case config.Sub:
+				subNode := result.ResultNodeSubMaster.NodeRes
+				// TODO: Start goroutines
+			case config.Refinery:
+				refineryNode := result.ResultNodeRefinery.NodeRes
+				// TODO: Start goroutines
+			case config.Receiver:
+				receiverNode := result.ResultNodeReceiver.NodeRes
+				// TODO: Start goroutines
+
+		*/
+	}
 }

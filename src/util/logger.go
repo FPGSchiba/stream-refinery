@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 const (
@@ -26,7 +27,26 @@ type Logger struct {
 }
 
 func (p Logger) logToFile(message string) {
-	panic("File logging not implemented!")
+	f, err := os.OpenFile(p.FilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(f)
+
+	if _, err = f.WriteString(message + "\n"); err != nil {
+		panic(err)
+	}
+}
+
+func (p Logger) getTime() string {
+	dt := time.Now()
+	return dt.Format("02.01.2006 15:04:05")
 }
 
 func (p Logger) logToConsole(message string) {
@@ -46,12 +66,12 @@ func (p Logger) logOut(message string, level string) {
 	}
 	switch p.LogType {
 	case LogTypeFile:
-		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, "test", level, message))
+		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	case LogTypeConsole:
-		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, "test", level, message))
+		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	case LogTypeConFile:
-		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, "test", level, message))
-		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, "test", level, message))
+		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
+		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	default:
 		panic("unhandled default case")
 	}
@@ -65,12 +85,12 @@ func (p Logger) logError(message string) {
 	}
 	switch p.LogType {
 	case LogTypeFile:
-		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, "test", message))
+		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	case LogTypeConsole:
-		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, "test", message))
+		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	case LogTypeConFile:
-		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, "test", message))
-		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, "test", message))
+		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
+		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	default:
 		panic("unhandled default case")
 	}
