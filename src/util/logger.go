@@ -8,41 +8,47 @@ import (
 )
 
 const (
-	LevelDebug = iota
-	LevelInfo  = iota
-	LevelError = iota
+	LevelDebug = 0
+	LevelInfo  = 2
+	LevelError = 5
 )
 
 const (
-	LogTypeFile    = iota
-	LogTypeConsole = iota
-	LogTypeConFile = iota
+	LogTypeFile    = "file"
+	LogTypeConsole = "console"
+	LogTypeConFile = "confile"
 )
 
 type Logger struct {
 	LogLevel int
 	FilePath string
-	LogType  int
+	LogType  string
 }
 
 func (p Logger) logToFile(message string) {
 	f, err := os.OpenFile(p.FilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
-		fmt.Println(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()))
-		os.Exit(LoggerErrorCode)
+		p.LogType = LogTypeConsole
+		p.Log(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()), LevelError)
+		p.logToConsole(message)
+		return
 	}
 
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			fmt.Println(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()))
-			os.Exit(LoggerErrorCode)
+			p.LogType = LogTypeConsole
+			p.Log(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()), LevelError)
+			p.logToConsole(message)
+			return
 		}
 	}(f)
 
 	if _, err = f.WriteString(message + "\n"); err != nil {
-		fmt.Println(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()))
-		os.Exit(LoggerErrorCode)
+		p.LogType = LogTypeConsole
+		p.Log(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()), LevelError)
+		p.logToConsole(message)
+		return
 	}
 }
 
@@ -68,14 +74,16 @@ func (p Logger) logOut(message string, level string) {
 	}
 	switch p.LogType {
 	case LogTypeFile:
+		fmt.Println("Logging to file")
 		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	case LogTypeConsole:
 		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	case LogTypeConFile:
+		fmt.Println("Logging to file")
 		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	default:
-		panic("unhandled default case")
+		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	}
 }
 
@@ -87,14 +95,16 @@ func (p Logger) logError(message string) {
 	}
 	switch p.LogType {
 	case LogTypeFile:
+		fmt.Println("Logging to file")
 		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	case LogTypeConsole:
 		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	case LogTypeConFile:
+		fmt.Println("Logging to file")
 		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	default:
-		panic("unhandled default case")
+		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	}
 }
 

@@ -19,13 +19,17 @@ func (n NodeRefinery) startClusterClient() {
 
 func (n NodeRefinery) startSteamService() {
 	n.Log(fmt.Sprintf("Stream Service listening on: 0.0.0.0:%d", util.DefaultStreamPort), util.LevelDebug)
-	ln, _ := net.Listen("tcp", fmt.Sprintf(":%d", util.DefaultStreamPort))
+	var port int
+	if port = util.DefaultConfigPort; n.Development {
+		port = util.DefaultConfigPort + 2
+	}
+	ln, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	conn, _ := ln.Accept()
 	go streamer.HandleRefineryConnection(conn)
 }
 
-func (n NodeRefinery) Start(logger util.Logger) {
-	n.Node.Start(logger)
+func (n NodeRefinery) Start(logger util.Logger, development bool) {
+	n.Node.Start(logger, development)
 	// go n.startSteamService()
 	n.startClusterClient()
 }

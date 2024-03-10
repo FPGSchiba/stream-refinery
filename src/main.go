@@ -46,7 +46,6 @@ func main() {
 		FilePath: "/Users/schiba/Projects/stream-refinery/log.txt",
 		LogType:  util.LogTypeConsole,
 	}
-	fmt.Println(fmt.Sprintf("Configured Logger: %v", logger))
 	resultNode, err := handleArgs(argsWithProg)
 	if err != nil {
 		logger.Log(err.Error(), util.LevelError)
@@ -60,10 +59,10 @@ func main() {
 	switch result.NodeType {
 	case config.Master:
 		masterNode := result.ResultNodeMaster.NodeRes
-		masterNode.Start(logger)
+		masterNode.Start(logger, true)
 	case config.Refinery:
 		refineryNode := result.ResultNodeRefinery.NodeRes
-		refineryNode.Start(logger)
+		refineryNode.Start(logger, true)
 		/*
 			case config.Sub:
 				subNode := result.ResultNodeSubMaster.NodeRes
