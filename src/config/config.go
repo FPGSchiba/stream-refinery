@@ -13,6 +13,7 @@ const (
 	Sub      = "submaster"
 	Refinery = "refinery"
 	Receiver = "receiver"
+	Version  = "0.0.1"
 )
 
 type ReturnNodeType struct {
@@ -36,6 +37,7 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 	case Master:
 		var masterNode master.NodeMaster
 		masterNode.NodeType = node.NodeType
+		masterNode.NodeID = node.NodeID
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeMaster.NodeRes = masterNode
@@ -44,6 +46,7 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 		var subNode NodeSubMaster
 		subNode.NodeType = node.NodeType
 		subNode.MasterHost = node.MasterHost
+		subNode.NodeID = node.NodeID
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeSubMaster.NodeRes = subNode
@@ -52,6 +55,7 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 		var refineryNode refinery.NodeRefinery
 		refineryNode.NodeType = node.NodeType
 		refineryNode.MasterHost = node.MasterHost
+		refineryNode.NodeID = node.NodeID
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeRefinery.NodeRes = refineryNode
@@ -60,6 +64,7 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 		var nodeReceiver NodeReceiver
 		nodeReceiver.NodeType = node.NodeType
 		nodeReceiver.MasterHost = node.MasterHost
+		nodeReceiver.NodeID = node.NodeID
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeReceiver.NodeRes = nodeReceiver

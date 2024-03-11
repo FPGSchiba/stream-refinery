@@ -1,30 +1,56 @@
 package cluster
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"streamref/src/util"
+	"strings"
+)
 
 type ClusterService struct {
 }
 
+// Protocol internal
 const (
 	endOfLine     = "<EOF>"
 	codeDelimiter = ";;"
 )
 
+// Command Codes
+const (
+	// Conn
+	ConnStartAuth = "conn:startAuth"
+
+	// Auth
+	AuthDec = "auth:dec"
+)
+
+// Request Codes
+const (
+	// Conn
+	ConnEstablish = "conn:establish"
+	AuthStart     = "auth:start"
+)
+
+// Shared Codes
+const (
+	// Conn
+	ConnClose = "conn:close"
+	ConnAlive = "conn:alive"
+
+	// Auth
+	AuthAck = "auth:ack"
+)
+
 func ConstructPacket(code string, payload map[string]interface{}) []byte {
-	var payloadStr string
 	var resString string
 	payloadLength := len(payload)
 
 	if payloadLength > 0 {
-		var count = 0
-		for key, value := range payload {
-			if payloadLength-1 == count {
-				payloadStr += fmt.Sprintf("\"%s\":\"%s\"", key, value)
-			} else {
-				payloadStr += fmt.Sprintf("\"%s\":\"%s\",", key, value)
-			}
-			fmt.Println(key, value)
-			count++
+		payloadStr, err := json.Marshal(payload)
+		if err != nil {
+			logger := util.Logger{LogType: util.LogTypeConsole}
+			logger.Log(fmt.Sprintf("Cluster Protocol Error with handling JSON: %s", err.Error()), util.LevelError)
 		}
 		resString = fmt.Sprintf("%s%s%s%s", code, codeDelimiter, payloadStr, endOfLine)
 	} else {
@@ -32,4 +58,17 @@ func ConstructPacket(code string, payload map[string]interface{}) []byte {
 	}
 
 	return []byte(resString)
+}
+
+func DeconstructPacket(message []byte) (string, map[string]interface{}, error) {
+	messageStr := string(message[:])
+	packetParts := strings.Split(messageStr, codeDelimiter)
+	code := packetParts[0]
+	payloadStr := strings.ReplaceAll(packetParts[1], endOfLine, "")
+	var payload map[string]interface{}
+	err := json.Unmarshal([]byte(payloadStr), &payload)
+	if err != nil {
+		return "", nil, err
+	}
+	return code, payload, nil
 }

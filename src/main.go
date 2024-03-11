@@ -11,7 +11,7 @@ import (
 )
 
 func handleArgs(args []string) (node.Node, error) {
-	var node node.Node
+	var node = node.NewNode(true)
 	if len(args) > 1 {
 		switch len(args) {
 		case 2:
@@ -59,10 +59,10 @@ func main() {
 	switch result.NodeType {
 	case config.Master:
 		masterNode := result.ResultNodeMaster.NodeRes
-		masterNode.Start(logger, true)
+		masterNode.Start(logger)
 	case config.Refinery:
 		refineryNode := result.ResultNodeRefinery.NodeRes
-		refineryNode.Start(logger, true)
+		refineryNode.Start(logger)
 		/*
 			case config.Sub:
 				subNode := result.ResultNodeSubMaster.NodeRes

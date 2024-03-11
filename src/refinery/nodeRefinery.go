@@ -8,6 +8,10 @@ import (
 	"streamref/src/util"
 )
 
+const (
+	Version = "0.0.1"
+)
+
 type NodeRefinery struct {
 	node.Node
 }
@@ -28,8 +32,8 @@ func (n NodeRefinery) startSteamService() {
 	go streamer.HandleRefineryConnection(conn)
 }
 
-func (n NodeRefinery) Start(logger util.Logger, development bool) {
-	n.Node.Start(logger, development)
+func (n NodeRefinery) Start(logger util.Logger) {
+	n.Node.Start(logger)
 	// go n.startSteamService()
 	n.startClusterClient()
 }

@@ -36,8 +36,8 @@ func (n NodeMaster) startClusterService() {
 	clusterService.Start(n)
 }
 
-func (n NodeMaster) Start(logger util.Logger, development bool) {
-	n.Node.Start(logger, development)
+func (n NodeMaster) Start(logger util.Logger) {
+	n.Node.Start(logger)
 	go func() {
 		err := n.startHTTPService()
 		if err != nil {
