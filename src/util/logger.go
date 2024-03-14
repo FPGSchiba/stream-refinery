@@ -74,12 +74,10 @@ func (p Logger) logOut(message string, level string) {
 	}
 	switch p.LogType {
 	case LogTypeFile:
-		fmt.Println("Logging to file")
 		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	case LogTypeConsole:
 		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	case LogTypeConFile:
-		fmt.Println("Logging to file")
 		p.logToConsole(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 		p.logToFile(fmt.Sprintf("%s - %s [%s]: %s", hostname, p.getTime(), level, message))
 	default:
@@ -95,12 +93,10 @@ func (p Logger) logError(message string) {
 	}
 	switch p.LogType {
 	case LogTypeFile:
-		fmt.Println("Logging to file")
 		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	case LogTypeConsole:
 		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	case LogTypeConFile:
-		fmt.Println("Logging to file")
 		p.logToErrConsole(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 		p.logToFile(fmt.Sprintf("%s - %s [ERROR]: %s", hostname, p.getTime(), message))
 	default:

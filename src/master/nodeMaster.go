@@ -15,6 +15,10 @@ type NodeMaster struct {
 	node.Node
 }
 
+const (
+	Version = "0.0.1"
+)
+
 func (n NodeMaster) startHTTPService() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler.GetRoot)

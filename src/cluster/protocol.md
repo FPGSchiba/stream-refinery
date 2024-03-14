@@ -44,13 +44,13 @@ Commands can be sent only from the master.
 ## Requests (Refinery)
 Can be sent by the other nodes. These requests are status reports and load issues.
 
-| Request Code   | Request Description     | Request Payload                                          |
-|----------------|-------------------------|----------------------------------------------------------|
-| conn:establish | test                    | `id`: Node Unique ID <br /> `version`: The node Version. | 
-| auth:start     |                         | `cert`: Master certificate                               |
-| conn:close     | Closes the connection   |                                                          |
-| auth:ack       |                         |                                                          |
-| conn:alive     |                         |                                                          |
+| Request Code   | Request Description   | Request Payload                                                                               |
+|----------------|-----------------------|-----------------------------------------------------------------------------------------------|
+| conn:establish | test                  | `id`: Node Unique ID <br /> `version`: The node Version. <br /> `type`: The Type of the node. | 
+| auth:start     |                       | `cert`: Master certificate                                                                    |
+| conn:close     | Closes the connection |                                                                                               |
+| auth:ack       |                       |                                                                                               |
+| conn:alive     |                       |                                                                                               |
 
 ## Packet Formatting
 Multiple packets for one string of information needed to handle larger payloads.

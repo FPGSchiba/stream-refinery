@@ -44,7 +44,7 @@ func (cs ClusterServiceRefinery) Start(node NodeRefinery) {
 func (cs ClusterServiceRefinery) HandleConnection(conn net.Conn) error {
 	defer conn.Close()
 	for {
-		err := Authenticate(conn, cs.node.NodeID)
+		err := authenticate(conn, cs.node.NodeID)
 		if err != nil {
 			return err
 		}

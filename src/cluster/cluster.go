@@ -60,15 +60,34 @@ func ConstructPacket(code string, payload map[string]interface{}) []byte {
 	return []byte(resString)
 }
 
+func jsonToMap(jsonStr string) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+	err := json.Unmarshal([]byte(jsonStr), &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func DeconstructPacket(message []byte) (string, map[string]interface{}, error) {
-	messageStr := string(message[:])
+	finalValue := 0
+	// Find filled bytes
+	for i := range message {
+		if message[i] != 0 {
+			finalValue = i + 1
+		}
+	}
+	// Only convert filled bytes to string
+	messageStr := string(message[:finalValue])
 	packetParts := strings.Split(messageStr, codeDelimiter)
 	code := packetParts[0]
 	payloadStr := strings.ReplaceAll(packetParts[1], endOfLine, "")
-	var payload map[string]interface{}
-	err := json.Unmarshal([]byte(payloadStr), &payload)
-	if err != nil {
-		return "", nil, err
+	if payloadStr != "" {
+		payload, err := jsonToMap(payloadStr)
+		if err != nil {
+			return "", nil, err
+		}
+		return code, payload, nil
 	}
-	return code, payload, nil
+	return code, nil, nil
 }
