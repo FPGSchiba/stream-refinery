@@ -9,8 +9,8 @@
 - [ ] Multiple Packet communication (Check for end of Packet)
 
 ## Master
-- [ ] Cluster Responses for Refinery
-- [ ] Certificate Generation for auth
+- [x] Cluster Responses for Refinery
+- [x] Certificate Generation for auth
 - [ ] Auth handling
 
 ## Refinery
