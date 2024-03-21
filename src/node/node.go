@@ -7,11 +7,13 @@ import (
 )
 
 type Node struct {
-	NodeType    string
-	MasterHost  string
-	Logger      util.Logger
-	Development bool
-	NodeID      string
+	NodeType        string
+	MasterHost      string
+	Logger          util.Logger
+	Development     bool
+	NodeID          string
+	CertificatePath string
+	KeyPath         string
 }
 
 func NewNode(development bool) Node {
@@ -25,5 +27,10 @@ func (n Node) Log(message string, level int) {
 
 func (n Node) Start(logger util.Logger) {
 	n.Logger = logger
-	n.Log(fmt.Sprintf("Configured Node: %s with upstream master: %s", n.NodeType, n.MasterHost), util.LevelInfo)
+	if n.NodeType != "master" {
+		n.Log(fmt.Sprintf("Configured Node: `%s` with upstream master: %s", n.NodeType, n.MasterHost), util.LevelInfo)
+	} else {
+		n.Log(fmt.Sprintf("Configured Node: `%s`", n.NodeType), util.LevelInfo)
+	}
+
 }

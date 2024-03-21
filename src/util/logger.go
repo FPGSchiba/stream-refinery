@@ -21,30 +21,12 @@ const (
 
 type Logger struct {
 	LogLevel int
-	FilePath string
+	LogFile  *os.File
 	LogType  string
 }
 
 func (p Logger) logToFile(message string) {
-	f, err := os.OpenFile(p.FilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		p.LogType = LogTypeConsole
-		p.Log(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()), LevelError)
-		p.logToConsole(message)
-		return
-	}
-
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			p.LogType = LogTypeConsole
-			p.Log(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()), LevelError)
-			p.logToConsole(message)
-			return
-		}
-	}(f)
-
-	if _, err = f.WriteString(message + "\n"); err != nil {
+	if _, err := p.LogFile.WriteString(message + "\n"); err != nil {
 		p.LogType = LogTypeConsole
 		p.Log(fmt.Sprintf("Unhandled Logging Error: %s", err.Error()), LevelError)
 		p.logToConsole(message)

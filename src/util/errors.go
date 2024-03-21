@@ -6,4 +6,5 @@ const (
 	NodeTypeError       = 102
 	HTTPServeError      = 103
 	ClusterServiceError = 104
+	CertificateError    = 105
 )

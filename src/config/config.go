@@ -13,7 +13,6 @@ const (
 	Sub      = "submaster"
 	Refinery = "refinery"
 	Receiver = "receiver"
-	Version  = "0.0.1"
 )
 
 type ReturnNodeType struct {
@@ -38,6 +37,9 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 		var masterNode master.NodeMaster
 		masterNode.NodeType = node.NodeType
 		masterNode.NodeID = node.NodeID
+		masterNode.Development = node.Development
+		masterNode.KeyPath = node.KeyPath
+		masterNode.CertificatePath = node.CertificatePath
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeMaster.NodeRes = masterNode
@@ -47,6 +49,9 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 		subNode.NodeType = node.NodeType
 		subNode.MasterHost = node.MasterHost
 		subNode.NodeID = node.NodeID
+		subNode.Development = node.Development
+		subNode.KeyPath = node.KeyPath
+		subNode.CertificatePath = node.CertificatePath
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeSubMaster.NodeRes = subNode
@@ -56,6 +61,9 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 		refineryNode.NodeType = node.NodeType
 		refineryNode.MasterHost = node.MasterHost
 		refineryNode.NodeID = node.NodeID
+		refineryNode.Development = node.Development
+		refineryNode.KeyPath = node.KeyPath
+		refineryNode.CertificatePath = node.CertificatePath
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeRefinery.NodeRes = refineryNode
@@ -65,6 +73,9 @@ func Construct(node node.Node) (ReturnNodeType, error) {
 		nodeReceiver.NodeType = node.NodeType
 		nodeReceiver.MasterHost = node.MasterHost
 		nodeReceiver.NodeID = node.NodeID
+		nodeReceiver.Development = node.Development
+		nodeReceiver.KeyPath = node.KeyPath
+		nodeReceiver.CertificatePath = node.CertificatePath
 		var result ReturnNodeType
 		result.NodeType = node.NodeType
 		result.ResultNodeReceiver.NodeRes = nodeReceiver
