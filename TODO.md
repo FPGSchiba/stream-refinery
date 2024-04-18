@@ -15,8 +15,8 @@
 
 ## Refinery
 - [ ] Finish Auth
-  - [ ] Read Certificate
-  - [ ] Send Certificate
+  - [x] Read Certificate
+  - [x] Send Certificate
 - [ ] Cluster Loop
 
 ## Sub Master
