@@ -3,17 +3,21 @@ package cluster
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"streamref/src/util"
 	"strings"
 )
 
-type ClusterService struct {
+type Message struct {
+	Code string
+	Data map[string]interface{}
 }
 
 // Protocol internal
 const (
 	endOfLine     = "<EOF>"
 	codeDelimiter = ";;"
+	packageSize   = 1024
 )
 
 // Command Codes
@@ -90,4 +94,14 @@ func DeconstructPacket(message []byte) (string, map[string]interface{}, error) {
 		return code, payload, nil
 	}
 	return code, nil, nil
+}
+
+func ReadNextMessage(conn net.Conn) (Message, error) {
+	// TODO: Handle reading of multiple Packages
+	// use packageSize here
+}
+
+func SendMessage(conn net.Conn, code string, payload map[string]interface{}) error {
+	// TODO: Handle sending of multiple Packages
+	// use packageSize here
 }

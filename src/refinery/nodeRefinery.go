@@ -1,8 +1,10 @@
 package refinery
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"net"
+	"os"
 	"streamref/src/node"
 	"streamref/src/streamer"
 	"streamref/src/util"
@@ -14,6 +16,7 @@ const (
 
 type NodeRefinery struct {
 	node.Node
+	publicKey *rsa.PublicKey
 }
 
 func (n NodeRefinery) startClusterClient() {
@@ -32,8 +35,18 @@ func (n NodeRefinery) startSteamService() {
 	go streamer.HandleRefineryConnection(conn)
 }
 
+func (n NodeRefinery) readPublicKey() *rsa.PublicKey {
+	publicKey, err := node.LoadRsaPublicKey(n.CertificatePath)
+	if err != nil {
+		n.Logger.Log(fmt.Sprintf("Could not load Public Key: %s", err.Error()), util.LevelError)
+		os.Exit(util.CertificateError)
+	}
+	return publicKey
+}
+
 func (n NodeRefinery) Start(logger util.Logger) {
 	n.Node.Start(logger)
+	n.publicKey = n.readPublicKey()
 	// go n.startSteamService()
 	n.startClusterClient()
 }

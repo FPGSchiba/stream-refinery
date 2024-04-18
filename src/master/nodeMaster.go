@@ -46,7 +46,6 @@ func (n NodeMaster) startClusterService() {
 
 func (n NodeMaster) generateCertificate() {
 	bitSize := certSize
-
 	privateKey, err := node.LoadRsaPrivateKey(n.KeyPath)
 	if err != nil {
 		privateKey, err := node.GeneratePrivateKey(bitSize)
@@ -57,12 +56,6 @@ func (n NodeMaster) generateCertificate() {
 			os.Exit(util.CertificateError)
 		}
 
-		publicKeyBytes, err := node.GeneratePublicKey(&privateKey.PublicKey)
-		if err != nil {
-			n.Logger.Log(fmt.Sprintf("Could not generate Public Key: %s", err.Error()), util.LevelError)
-			os.Exit(util.CertificateError)
-		}
-
 		privateKeyBytes := node.EncodePrivateKeyToPEM(privateKey)
 
 		err = node.WriteKeyToFile(privateKeyBytes, n.KeyPath)
@@ -70,6 +63,8 @@ func (n NodeMaster) generateCertificate() {
 			n.Logger.Log(fmt.Sprintf("Could not save Private Key: %s", err.Error()), util.LevelError)
 			os.Exit(util.CertificateError)
 		}
+
+		publicKeyBytes := node.EncodePublicKeyToPEM(&privateKey.PublicKey)
 
 		err = node.WriteKeyToFile(publicKeyBytes, n.CertificatePath)
 		if err != nil {

@@ -20,13 +20,13 @@ func main() {
 		}
 		return errors.New(fmt.Sprintf("NodeType %s not know. Any of: (`master`, `submaster`, `refinery`, `receiver`) accepted", args[0]))
 	}})
-	privateKey := parser.File("k", "key", os.O_RDONLY, 0600, &argparse.Options{Required: false, Help: "The path of the private key. To read as master node and generate if not exists", Default: "./id_rsa_test", Validate: func(args []string) error {
+	privateKey := parser.String("k", "key", &argparse.Options{Required: false, Help: "The path of the private key. To read as master node and generate if not exists", Default: "./id_rsa_test", Validate: func(args []string) error {
 		if *nodeType != config.Master {
 			return errors.New("only Master node is allowed a PrivateKey. No need for another node to have one")
 		}
 		return nil
 	}})
-	certificate := parser.File("c", "cert", os.O_RDONLY, 0600, &argparse.Options{Required: false, Help: "The path to the public certificate to connect to a master node", Default: "./id_rsa_test.pub"})
+	certificate := parser.String("c", "cert", &argparse.Options{Required: false, Help: "The path to the public certificate to connect to a master node", Default: "./id_rsa_test.pem"})
 	logFile := parser.File("l", "log-file", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600, &argparse.Options{Required: false, Help: "The path to the log file", Default: "./log.txt"})
 	logLevel := parser.Int("L", "log-level", &argparse.Options{Required: false, Help: fmt.Sprintf("The Log-Level for the logger used. Valid Levels:\n                   Debug: [%d]\n                   Info: [%d]\n                   Error: [%d]", util.LevelDebug, util.LevelInfo, util.LevelError), Default: util.LevelDebug, Validate: func(args []string) error {
 		if args[0] == fmt.Sprintf("%d", util.LevelError) || args[0] == fmt.Sprintf("%d", util.LevelDebug) || args[0] == fmt.Sprintf("%d", util.LevelInfo) {
@@ -56,6 +56,7 @@ func main() {
 			}
 		}
 	}})
+
 	err := parser.Parse(os.Args)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -75,25 +76,14 @@ func main() {
 		LogType:  *logType,
 	}
 
-	certPath, err := filepath.Abs(certificate.Name())
+	certPath, err := filepath.Abs(*certificate)
 	if err != nil {
 		logger.Log(fmt.Sprintf("Failed to read Abs Path: %s", err.Error()), util.LevelError)
 		os.Exit(util.ArgumentErrorCode)
 	}
-	keyPath, err := filepath.Abs(privateKey.Name())
+	keyPath, err := filepath.Abs(*privateKey)
 	if err != nil {
 		logger.Log(fmt.Sprintf("Failed to read Abs Path: %s", err.Error()), util.LevelError)
-		os.Exit(util.ArgumentErrorCode)
-	}
-
-	err = certificate.Close()
-	if err != nil {
-		logger.Log(fmt.Sprintf("%s", err.Error()), util.LevelError)
-		os.Exit(util.ArgumentErrorCode)
-	}
-	err = privateKey.Close()
-	if err != nil {
-		logger.Log(fmt.Sprintf("%s", err.Error()), util.LevelError)
 		os.Exit(util.ArgumentErrorCode)
 	}
 
@@ -103,10 +93,6 @@ func main() {
 	currentNode.CertificatePath = certPath
 	currentNode.KeyPath = keyPath
 
-	if err != nil {
-		logger.Log(err.Error(), util.LevelError)
-		os.Exit(util.ArgumentErrorCode)
-	}
 	result, err := config.Construct(currentNode)
 	if err != nil {
 		logger.Log(err.Error(), util.LevelError)

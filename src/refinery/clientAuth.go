@@ -1,13 +1,16 @@
 package refinery
 
 import (
+	"crypto/rsa"
 	"errors"
 	"fmt"
 	"net"
 	"streamref/src/cluster"
+	"streamref/src/node"
+	_ "streamref/src/node"
 )
 
-func authenticate(conn net.Conn, nodeID string) error {
+func authenticate(conn net.Conn, nodeID string, key *rsa.PublicKey) error {
 	message := cluster.ConstructPacket(cluster.ConnEstablish, map[string]interface{}{"id": nodeID, "version": Version, "type": "refinery"})
 	_, err := conn.Write(message)
 	if err != nil {
@@ -24,7 +27,9 @@ func authenticate(conn net.Conn, nodeID string) error {
 	}
 	if code == cluster.ConnStartAuth {
 		fmt.Println("Ready to start auth")
-		message = cluster.ConstructPacket(cluster.AuthStart, map[string]interface{}{"cert": ""})
+		keyBytes := node.EncodePublicKeyToPEM(key)
+		message = cluster.ConstructPacket(cluster.AuthStart, map[string]interface{}{"cert": keyBytes})
+		fmt.Println(len(message))
 		_, err := conn.Write(message)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Failed to send establish packet: %s", err.Error()))
