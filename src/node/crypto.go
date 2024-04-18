@@ -82,6 +82,18 @@ func EncodePublicKeyToPEM(publicKey *rsa.PublicKey) []byte {
 	return publicPEM
 }
 
+func DecodePublicKeyFromPEM(publicKey []byte) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode(publicKey)
+	if block == nil {
+		return nil, errors.New("failed to decode PEM block")
+	}
+	pub, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	return pub, nil
+}
+
 func GeneratePublicKey(privateKey *rsa.PublicKey) ([]byte, error) {
 	publicRsaKey, err := ssh.NewPublicKey(privateKey)
 	if err != nil {

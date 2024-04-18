@@ -26,7 +26,7 @@ func (cs ClusterServiceRefinery) Start(node NodeRefinery) {
 		if err == nil && conn != nil {
 			connectionError := cs.HandleConnection(conn)
 			if connectionError != nil {
-				cs.node.Log(err.Error(), util.LevelError)
+				cs.node.Log(connectionError.Error(), util.LevelError)
 			} else {
 				failed = false
 			}
@@ -42,7 +42,12 @@ func (cs ClusterServiceRefinery) Start(node NodeRefinery) {
 }
 
 func (cs ClusterServiceRefinery) HandleConnection(conn net.Conn) error {
-	defer conn.Close()
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			cs.node.Log(err.Error(), util.LevelError)
+		}
+	}(conn)
 	for {
 		err := authenticate(conn, cs.node.NodeID, cs.node.publicKey)
 		if err != nil {

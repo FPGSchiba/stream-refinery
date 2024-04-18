@@ -34,6 +34,7 @@ func (cs ClusterServiceMaster) Start(node NodeMaster) {
 
 func (cs ClusterServiceMaster) HandleConnection(conn net.Conn) {
 	defer func(conn net.Conn) {
+		// TODO: Formal connection close
 		err := conn.Close()
 		if err != nil {
 			cs.node.Log(err.Error(), util.LevelError)
@@ -50,10 +51,14 @@ func (cs ClusterServiceMaster) HandleConnection(conn net.Conn) {
 	cs.clients[idx].nodeType = nodeType
 	cs.clients[idx].nodeID = nodeID
 
-	err = authenticate(conn)
+	pub, err := authenticate(conn)
+
 	if err != nil {
 		cs.node.Log(err.Error(), util.LevelError)
 		return
+	}
+	if pub.Equal(cs.node.publicKey) {
+		fmt.Println("Auth successful")
 	}
 
 	for {

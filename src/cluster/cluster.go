@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"regexp"
 	"streamref/src/util"
 	"strings"
 )
+
+type ClusterService struct{}
 
 type Message struct {
 	Code string
@@ -46,7 +49,7 @@ const (
 	AuthAck = "auth:ack"
 )
 
-func ConstructPacket(code string, payload map[string]interface{}) []byte {
+func constructPacket(code string, payload map[string]interface{}) []byte {
 	var resString string
 	payloadLength := len(payload)
 
@@ -73,16 +76,8 @@ func jsonToMap(jsonStr string) (map[string]interface{}, error) {
 	return result, nil
 }
 
-func DeconstructPacket(message []byte) (string, map[string]interface{}, error) {
-	finalValue := 0
-	// Find filled bytes
-	for i := range message {
-		if message[i] != 0 {
-			finalValue = i + 1
-		}
-	}
-	// Only convert filled bytes to string
-	messageStr := string(message[:finalValue])
+func deconstructPacket(message string) (string, map[string]interface{}, error) {
+	messageStr := message
 	packetParts := strings.Split(messageStr, codeDelimiter)
 	code := packetParts[0]
 	payloadStr := strings.ReplaceAll(packetParts[1], endOfLine, "")
@@ -96,12 +91,68 @@ func DeconstructPacket(message []byte) (string, map[string]interface{}, error) {
 	return code, nil, nil
 }
 
+func allZero(s []byte) bool {
+	for _, v := range s {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func hasEndOfLine(data []byte) bool {
+	if allZero(data) {
+		return false
+	}
+	if strings.Contains(string(data), endOfLine) {
+		return true
+	}
+	return false
+}
+
 func ReadNextMessage(conn net.Conn) (Message, error) {
-	// TODO: Handle reading of multiple Packages
-	// use packageSize here
+	buffer := make([]byte, packageSize)
+	var content string
+	for !hasEndOfLine(buffer) {
+		_, err := conn.Read(buffer)
+
+		// Find filled bytes
+		finalValue := 0
+		for i := range buffer {
+			if buffer[i] != 0 {
+				finalValue = i + 1
+			}
+		}
+
+		if err != nil {
+			return Message{}, err
+		}
+
+		currentContent := string(buffer[:finalValue])
+		endOfRegex, err := regexp.Compile("<EOF>.*")
+		if err != nil {
+			return Message{}, err
+		}
+
+		// Replacing not needed Data after end of Packet
+		if hasEndOfLine(buffer) && !strings.HasSuffix(currentContent, endOfLine) {
+			currentContent = endOfRegex.ReplaceAllString(currentContent, "")
+		}
+		content += currentContent
+	}
+
+	code, payload, err := deconstructPacket(content)
+	if err != nil {
+		return Message{}, err
+	}
+	return Message{Code: code, Data: payload}, nil
 }
 
 func SendMessage(conn net.Conn, code string, payload map[string]interface{}) error {
-	// TODO: Handle sending of multiple Packages
-	// use packageSize here
+	message := constructPacket(code, payload)
+	_, err := conn.Write(message)
+	if err != nil {
+		return err
+	}
+	return nil
 }
