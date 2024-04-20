@@ -6,7 +6,8 @@
 ## General
 - [ ] Cluster Protocol Loop
 - [ ] Testing
-- [ ] Multiple Packet communication (Check for end of Packet)
+- [x] Multiple Packet communication (Check for end of Packet)
+- [ ] Log file to standard log directory is a better practice
 
 ## Master
 - [x] Cluster Responses for Refinery
