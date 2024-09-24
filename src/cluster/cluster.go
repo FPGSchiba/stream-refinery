@@ -2,9 +2,11 @@ package cluster
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"regexp"
+	"strconv"
 	"streamref/src/util"
 	"strings"
 )
@@ -52,18 +54,16 @@ const (
 func constructPacket(code string, payload map[string]interface{}) []byte {
 	var resString string
 	payloadLength := len(payload)
-
 	if payloadLength > 0 {
 		payloadStr, err := json.Marshal(payload)
 		if err != nil {
 			logger := util.Logger{LogType: util.LogTypeConsole}
 			logger.Log(fmt.Sprintf("Cluster Protocol Error with handling JSON: %s", err.Error()), util.LevelError)
 		}
-		resString = fmt.Sprintf("%s%s%s%s", code, codeDelimiter, payloadStr, endOfLine)
+		resString = fmt.Sprintf("%s%s%d%s%s%s", code, codeDelimiter, len(payloadStr), codeDelimiter, payloadStr, endOfLine)
 	} else {
-		resString = fmt.Sprintf("%s%s%s", code, codeDelimiter, endOfLine)
+		resString = fmt.Sprintf("%s%s0%s%s", code, codeDelimiter, codeDelimiter, endOfLine)
 	}
-
 	return []byte(resString)
 }
 
@@ -77,10 +77,9 @@ func jsonToMap(jsonStr string) (map[string]interface{}, error) {
 }
 
 func deconstructPacket(message string) (string, map[string]interface{}, error) {
-	messageStr := message
-	packetParts := strings.Split(messageStr, codeDelimiter)
+	packetParts := strings.Split(message, codeDelimiter)
 	code := packetParts[0]
-	payloadStr := strings.ReplaceAll(packetParts[1], endOfLine, "")
+	payloadStr := strings.ReplaceAll(packetParts[2], endOfLine, "")
 	if payloadStr != "" {
 		payload, err := jsonToMap(payloadStr)
 		if err != nil {
@@ -110,9 +109,26 @@ func hasEndOfLine(data []byte) bool {
 	return false
 }
 
+func parsePackageLength(data []byte, finalValue int) int {
+	dataStr := string(data[:finalValue])
+	headerRegex, err := regexp.Compile(".+;;")
+	if err != nil {
+		return 0
+	}
+	header := headerRegex.Find(data)
+	packageParts := strings.Split(dataStr, codeDelimiter)
+	payloadLength, err := strconv.Atoi(packageParts[1])
+	if err != nil {
+		return 0
+	}
+	return len(header) + payloadLength + len(endOfLine)
+}
+
 func ReadNextMessage(conn net.Conn) (Message, error) {
 	buffer := make([]byte, packageSize)
 	var content string
+	var readLength = 0
+	var packageLength = 0
 	for !hasEndOfLine(buffer) {
 		_, err := conn.Read(buffer)
 
@@ -128,19 +144,24 @@ func ReadNextMessage(conn net.Conn) (Message, error) {
 			return Message{}, err
 		}
 
-		currentContent := string(buffer[:finalValue])
-		endOfRegex, err := regexp.Compile("<EOF>.*")
-		if err != nil {
-			return Message{}, err
+		if readLength == 0 {
+			packageLength = parsePackageLength(buffer, finalValue)
 		}
-
-		// Replacing not needed Data after end of Packet
-		if hasEndOfLine(buffer) && !strings.HasSuffix(currentContent, endOfLine) {
-			currentContent = endOfRegex.ReplaceAllString(currentContent, "")
+		if packageLength == 0 {
+			return Message{}, errors.New("failed to parse package length")
 		}
-		content += currentContent
+		if packageLength == finalValue {
+			content = string(buffer[:packageLength])
+			break
+		}
+		if packageLength > (finalValue + (readLength * packageSize)) {
+			content += string(buffer[:finalValue])
+		}
+		if packageLength < (finalValue + (readLength * packageSize)) {
+			content += string(buffer[:packageLength-(readLength*packageSize)])
+		}
+		readLength++
 	}
-
 	code, payload, err := deconstructPacket(content)
 	if err != nil {
 		return Message{}, err

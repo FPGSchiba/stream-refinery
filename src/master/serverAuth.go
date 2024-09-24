@@ -54,6 +54,8 @@ func authenticate(conn net.Conn) (*rsa.PublicKey, error) {
 	switch packet.Code {
 	case cluster.AuthStart:
 		cert := packet.Data["cert"].(string)
+		cert = "-----BEGIN RSA PUBLIC KEY-----\n" + cert + "\n" + "-----END RSA PUBLIC KEY-----"
+		fmt.Println(cert)
 		pub, err := node.DecodePublicKeyFromPEM([]byte(cert))
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Failed to parse Certificate: %s", err.Error()))

@@ -56,6 +56,7 @@ Can be sent by the other nodes. These requests are status reports and load issue
 Multiple packets for one string of information needed to handle larger payloads.
 For this a End of Information tag must be set.
 
- * Packet: `${code};;${payload}<EOF>`
+ * Packet: `${code};;${payload_length};;${payload}<EOF>`
  * Payload: `"{${key}":"${value}","${key}":["${value}","${value}"],"${key}":{"${key}":"${value}"}}` repeated for all Key Value pairs
  * Code: `${prefix}:${command}`
+ * Payload-Length: `${length}`
